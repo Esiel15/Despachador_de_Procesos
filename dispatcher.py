@@ -18,8 +18,8 @@ from common import MINPROCESS, MAXPROCESS, MAX_DRAM, MAX_PCM, MAX_VM, Process, O
 QUANTUM = 5 # Duración del Quantum
 REFQ = 1 # Duración de la referencia
 
-HOT_PAGE_THRESHOLD = 0;
-EXPIRATION = 8;
+HOT_PAGE_THRESHOLD = 0
+EXPIRATION = 8
 
 # Varialbes Globlaes (!)
 dram = []
