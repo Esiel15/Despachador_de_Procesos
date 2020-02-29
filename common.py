@@ -3,8 +3,9 @@ from enum import Enum
 MINPROCESS = 1
 MAXPROCESS = 15
 
-MAX_DRAM = 8
-MAX_PCM = 14
+MAX_DRAM = 5
+MAX_PCM = 10
+MAX_VM = (MAX_DRAM + MAX_PCM) * 2
 
 class Process:
     def __init__(self, pid : int, priority : int, refchain : str):
@@ -43,8 +44,3 @@ class Page:
         self.frec = 0
         self.olr = 0
         self.owner = owner
-
-# Operaciones que realiza cada pagina
-class Operation(Enum):
-    READ = 0
-    WRITE = 1

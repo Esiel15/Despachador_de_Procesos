@@ -14,7 +14,7 @@
 
 from time import sleep
 from random import randint
-from common import MINPROCESS, MAXPROCESS
+from common import MINPROCESS, MAXPROCESS, Process
 
 MINSLEEP = 10
 MAXSLEEP = 15
@@ -28,7 +28,14 @@ def charge(shlist, lock, fband):
     while rawproclist:
         lock.acquire()
         for i in range(randint(MINPROCESS, MAXPROCESS)):
-            if rawproclist: shlist.put(rawproclist.pop()) 
+            if rawproclist:
+                # Construye el objeto Process
+                info = rawproclist.pop().split(',')
+                pid = int(info[0])
+                prior = int(info[1])
+                refchain = info[2]
+
+                shlist.put(Process(pid, prior, refchain))
             else: break
         lock.release()
 

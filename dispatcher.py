@@ -13,7 +13,7 @@
 
 from random import randint
 from time import sleep
-from common import MINPROCESS, MAXPROCESS, MAX_DRAM, MAX_PCM, Process, Operation, Page
+from common import MINPROCESS, MAXPROCESS, MAX_DRAM, MAX_PCM, MAX_VM, Process, Operation, Page
 
 QUANTUM = 5 # Duración del Quantum
 REFQ = 1 # Duración de la referencia
@@ -30,8 +30,10 @@ dram_index = 0
 pcm_index = 0
 
 def dispatch(shlist, lock, fband):
+    # Variables del simulador
     proclist = []
     finished = []
+    aniquilated = []
     active_proc = None
     numproc = 0
     q = 1
@@ -49,20 +51,20 @@ def dispatch(shlist, lock, fband):
         # Toma cada proceso en la memoria compartida y lo agrega a la lista
         # Agrega sus páginas a la memoria virtual
         while not shlist.empty():
-            # Construye el objeto Process
-            info = shlist.get().split(',')
-            pid = int(info[0])
-            prior = int(info[1])
-            refchain = info[2]
+            # Se obtiene un proceso de la lista compartida
+            newproc = shlist.get()
+            # Si ya no es posible asignarle memoria virtual, se aniquila
+            if len(newproc.pagelist) > MAX_VM - len(vm):
+                print("El proceso es demasiado grande\nNo se le puede asignar memoria. Aniquilando...")
+                aniquilated.append(newproc)
+            else:
+                for page in newproc.pagelist:
+                    vm.append(page)
 
-            newproc = Process(pid, prior, refchain)
-            for page in newproc.pagelist:
-                vm.append(page)
-
-            proclist.append(newproc)
-            print(f'Added: {newproc.pid}')
-            i += 1
-            numproc += 1
+                proclist.append(newproc)
+                print(f'Added: {newproc.pid}\tVM : {MAX_VM - len(vm)}/{MAX_VM} frames restantes')
+                i += 1
+                numproc += 1
         lock.release()
 
         print('Loop')
