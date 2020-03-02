@@ -12,8 +12,9 @@
 #   Primavera 2020
 
 from random import randint
-from time import sleep
-from common import MINPROCESS, MAXPROCESS, MAX_DRAM, MAX_PCM, MAX_VM, Process, Operation, Page
+from time import sleep, time
+from common import MINPROCESS, MAXPROCESS, MAX_DRAM, MAX_PCM, MAX_VM, Process, Page
+from results import output
 
 QUANTUM = 5 # Duración del Quantum
 REFQ = 1 # Duración de la referencia
@@ -21,7 +22,7 @@ REFQ = 1 # Duración de la referencia
 HOT_PAGE_THRESHOLD = 0
 EXPIRATION = 8
 
-# Varialbes Globlaes (!)
+# Varialbes Globales (!)
 dram = []
 pcm = []
 vm = []
@@ -29,7 +30,13 @@ vm = []
 dram_index = 0
 pcm_index = 0
 
+# Variables estadísicas
+refcount = 0 # Total de referencias hechas
+pfcount = 0  # Total de fallos de página
+
 def dispatch(shlist, lock, fband):
+    global refcount
+    
     # Variables del simulador
     proclist = []
     finished = []
@@ -37,6 +44,8 @@ def dispatch(shlist, lock, fband):
     active_proc = None
     numproc = 0
     q = 1
+
+    start = time()
 
     while True:
         # Accede a la memoria compartida
@@ -68,7 +77,7 @@ def dispatch(shlist, lock, fband):
         lock.release()
 
         print('Loop')
-        sleep(1)
+        sleep(REFQ)
 
         # Si hay un proceso activo
         if active_proc != None:
@@ -103,9 +112,11 @@ def dispatch(shlist, lock, fband):
                 q = 0
             
             if numproc > 0:
+                # Ejecutar página
                 clockdwf(active_proc.nextpage(), randint(0, 1))
                 q += REFQ
                 updtwait(proclist, active_proc.pid)
+                refcount += 1
             pass
         else:
             # Si aún quedan procesos disponibles
@@ -118,6 +129,13 @@ def dispatch(shlist, lock, fband):
                 clockdwf(active_proc.nextpage(), randint(0, 1))
                 q += REFQ
                 updtwait(proclist, active_proc.pid)
+                refcount += 1
+    
+    end = time()
+
+    systime = end - start
+    output(finished, aniquilated, systime, refcount, pfcount)
+
 
 # Calcula el total de tickets
 # El total de tickets es la suma de todos las prioridades de todos los procesos
@@ -153,14 +171,18 @@ def updtwait(proclist, active_pid):
 
 
 # Algoritmo CLOCK-DWF
-def clockdwf(page : Page, op : Operation) :
+def clockdwf(page : Page, op) :
+    global pfcount
+    global dram
+    global pcm
+
     if (page in dram) : #Si la pagina esta en dram 
-        if (op == Operation.READ) : 
+        if (op == 0) : 
             page.r = 1 #Se cambia el bit R
         else: 
             page.m = page.r = 1 #Se cambia el bit R y M
     elif (page in pcm) : #Si la pagina esta en pcm
-        if (op == Operation.READ) : 
+        if (op == 0) : 
             page.r = 1 #Se cambia el bit R
         else:
             free_frame_dram()
@@ -169,6 +191,7 @@ def clockdwf(page : Page, op : Operation) :
             print('\t--- Cambiada a la DRAM ---')
             print(f'\tDRAM: {MAX_DRAM - len(dram)}/{MAX_DRAM} frames disponibles.')
     else: #FALLO DE PÁGINA
+        pfcount += 1
         print('\t--- Fallo de Página ---')
         opp = 'Lectura' if op == 0 else 'Escritura'
         print(f'\t--- Operación: {opp}')
