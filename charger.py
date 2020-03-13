@@ -17,7 +17,7 @@ from random import randint
 from common import MINPROCESS, MAXPROCESS, Process
 
 MINSLEEP = 10
-MAXSLEEP = 15
+MAXSLEEP = 30
 FILENAME = "input.txt"
 
 def charge(shlist, lock, fband):

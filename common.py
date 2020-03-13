@@ -3,9 +3,9 @@ from enum import Enum
 MINPROCESS = 1
 MAXPROCESS = 15
 
-MAX_DRAM = 30
-MAX_PCM = 45
-MAX_VM = (MAX_DRAM + MAX_PCM) * 2
+MAX_DRAM = 256
+MAX_PCM = 512
+MAX_VM = 1024
 
 class Process:
     def __init__(self, pid : int, priority : int, refchain : str):
